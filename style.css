@@ -1,0 +1,57 @@
+body, html {
+    height: 100%;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: #eee; /* Optional: Adds a background color to the whole page */
+  }
+  
+  #checkersBoard {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr); /* Creates an 8x8 grid */
+    grid-template-rows: repeat(8, 1fr);
+    /* Adjust size based on viewport while maintaining aspect ratio */
+    width: 80vmin; /* Use vmin to keep the board square on all screen sizes */
+    height: 80vmin;
+    border: 2px solid #333; /* Adds a border around the board */
+    box-shadow: 0 0 10px rgba(0,0,0,0.5); /* Optional: Adds shadow for depth */
+  }
+  
+  .square {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .black {
+    background-color: #b58863; /* Dark square color */
+  }
+  
+  .white {
+    background-color: #f0d9b5; /* Light square color */
+  }
+  
+  .piece {
+    width: 70%; /* Adjust the size of the pieces relative to the square */
+    height: 70%;
+    border-radius: 50%; /* Makes the pieces circular */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .black-piece {
+    background-color: black; /* Black player's pieces */
+    border: 2px solid #fff; /* Adds contrast border */
+  }
+  
+  .white-piece {
+    background-color: white; /* White player's pieces */
+    border: 2px solid #000; /* Adds contrast border */
+  }
+  
+  .king {
+    /* Additional styling for kings, such as a crown icon, can go here */
+  }
+  
