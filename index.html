@@ -6,7 +6,17 @@
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <div id="checkersBoard"></div>
+    <div id="gameArea">
+        <div id="playerSide" class="captureArea">
+            <h2>Your Captured Pieces</h2>
+            <div id="playerCaptures"></div>
+        </div>
+        <div id="checkersBoard"></div>
+        <div id="cpuSide" class="captureArea">
+            <h2>CPU Captured Pieces</h2>
+            <div id="cpuCaptures"></div>
+        </div>
+    </div>
     <script src="script.js"></script>
 </body>
 </html>

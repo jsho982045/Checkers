@@ -54,4 +54,38 @@ body, html {
   .king {
     /* Additional styling for kings, such as a crown icon, can go here */
   }
+
+  /* Existing styles ... */
+
+#gameArea {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    flex-direction: column;
+    width: 100%;
+    height: 100%;
+  }
+  
+  .captureArea {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  
+  .captureArea h2 {
+    margin: 10px 0;
+  }
+  
+  #playerCaptures, #cpuCaptures {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    max-width: 400px; /* Same as board width */
+    margin: 10px 0;
+  }
+  
+  .captured {
+    opacity: 0.5; /* Make captured pieces appear faded */
+  }
+  
   
