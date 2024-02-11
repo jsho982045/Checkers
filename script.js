@@ -52,15 +52,14 @@ function handleDragOver(e) {
 
 function handleDrop(e) {
     e.preventDefault();
-    if (!isPlayerTurn) return; // Ignore drops during the computer's turn
+    if (!isPlayerTurn) return;
 
     const fromId = e.dataTransfer.getData('text/plain');
-    const toId = e.target.id || e.target.parentElement.id; // Correctly identify the target square
+    const toId = e.target.id || e.target.parentElement.id;
 
     if (isValidMove(fromId, toId, 'black-piece')) {
         movePiece(fromId, toId);
-        isPlayerTurn = false; // End player's turn
-        setTimeout(computerMove, 500); // Delay computer's move for better UX
+        setTimeout(computerMove, 500);
     }
 }
 
@@ -102,18 +101,21 @@ function movePiece(fromId, toId) {
     const piece = fromSquare.removeChild(fromSquare.firstChild);
     toSquare.appendChild(piece);
 
-    // Check if the move is a capture move
+    if (shouldKing(toId, piece.classList.contains('black-piece'))) {
+        piece.classList.add('king');
+        // Optionally, update the piece's appearance to indicate it's a king
+    }
+
     if (Math.abs(parseInt(fromId[1]) - parseInt(toId[1])) === 2) {
-        // Capture logic
         removeCapturedPiece(fromId, toId);
     }
 
-    // Toggle turn after move
-    isPlayerTurn = !isPlayerTurn;
+    isPlayerTurn = !isPlayerTurn; // Toggle turn
+}
 
-    if (!isPlayerTurn) {
-        setTimeout(computerMove, 500); // Computer takes a turn after a delay
-    }
+function shouldKing(squareId, isBlackPiece) {
+    const row = parseInt(squareId.substring(1, 2));
+    return (isBlackPiece && row === 8) || (!isBlackPiece && row === 1);
 }
 
 function removeCapturedPiece(fromId, toId) {
@@ -125,7 +127,6 @@ function removeCapturedPiece(fromId, toId) {
     const midSquare = document.getElementById(midSquareId);
     const capturedPiece = midSquare.removeChild(midSquare.firstChild);
 
-    // Determine the capture area based on the piece color
     const captureAreaId = capturedPiece.classList.contains('black-piece') ? 'cpuCaptures' : 'playerCaptures';
     document.getElementById(captureAreaId).appendChild(capturedPiece);
 }
@@ -133,21 +134,34 @@ function removeCapturedPiece(fromId, toId) {
 
 
 function computerMove() {
-    const possibleMoves = generatePossibleMoves('white-piece');
-    if (possibleMoves.length > 0) {
-        const bestMove = selectBestMove(possibleMoves);
-        executeMove(bestMove.fromId, bestMove.toId);
-        isPlayerTurn = true; // Give turn back to player
+    if (!isPlayerTurn) {
+        const possibleMoves = generatePossibleMoves('white-piece');
+        if (possibleMoves.length > 0) {
+            const bestMove = selectBestMove(possibleMoves);
+            if (bestMove) {
+                executeMove(bestMove.fromId, bestMove.toId);
+                // Handle capture if there's a jump
+                if (Math.abs(parseInt(bestMove.fromId[1]) - parseInt(bestMove.toId[1])) === 2) {
+                    removeCapturedPiece(bestMove.fromId, bestMove.toId);
+                }
+                // After moving, check for kinging
+                const movedPiece = document.getElementById(bestMove.toId).querySelector('.piece');
+                if (shouldKing(bestMove.toId, movedPiece.classList.contains('white-piece'))) {
+                    movedPiece.classList.add('king');
+                    // Optionally, update the piece's appearance to indicate it's a king
+                }
+                isPlayerTurn = true; // Toggle turn back to the player
+            }
+        }
     }
 }
 
 function generatePossibleMoves(color) {
-    const moves = [];
-    const pieces = document.querySelectorAll(`.${color}`);
-    pieces.forEach(piece => {
+    let moves = [];
+    document.querySelectorAll(`.${color}`).forEach(piece => {
         const squareId = piece.parentElement.id;
-        const potentialMoves = getPotentialMoves(squareId, color);
-        potentialMoves.forEach(move => {
+        // Generate all valid moves for this piece, including potential captures
+        getPotentialMoves(squareId, color).forEach(move => {
             if (isValidMove(squareId, move, color)) {
                 moves.push({fromId: squareId, toId: move});
             }
@@ -157,10 +171,15 @@ function generatePossibleMoves(color) {
 }
 
 function selectBestMove(moves) {
-    // This function can be enhanced to evaluate and prioritize moves
-    const index = Math.floor(Math.random() * moves.length);
-    return moves[index];
+    // Prioritize captures if available
+    const captures = moves.filter(move => Math.abs(parseInt(move.fromId[1]) - parseInt(move.toId[1])) === 2);
+    if (captures.length > 0) {
+        return captures[Math.floor(Math.random() * captures.length)];
+    }
+    // Fallback to random move if no captures are available
+    return moves[Math.floor(Math.random() * moves.length)];
 }
+
 
 function executeMove(fromId, toId) {
     const fromSquare = document.getElementById(fromId);
