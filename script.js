@@ -1,6 +1,6 @@
 document.addEventListener('DOMContentLoaded', initializeBoard);
 
-let isPlayerTurn = true; // Start with the player's turn
+let isPlayerTurn = true; 
 
 function initializeBoard() {
     const board = document.getElementById('checkersBoard');
@@ -74,7 +74,6 @@ function isValidMove(fromId, toId, color) {
     const [toRow, toCol] = toId.substring(1).split('c').map(Number);
     const direction = color === 'black-piece' ? 1 : -1;
 
-    // Adjusted for correct diagonal move checking
     const isSimpleMove = (Math.abs(fromRow - toRow) === 1 && Math.abs(fromCol - toCol) === 1 && (toRow - fromRow) === direction);
     const isCaptureMove = (Math.abs(fromRow - toRow) === 2 && Math.abs(fromCol - toCol) === 2 && isCapture(fromId, toId, color));
 
@@ -101,16 +100,39 @@ function movePiece(fromId, toId) {
     const piece = fromSquare.removeChild(fromSquare.firstChild);
     toSquare.appendChild(piece);
 
-    if (shouldKing(toId, piece.classList.contains('black-piece'))) {
-        piece.classList.add('king');
-        // Optionally, update the piece's appearance to indicate it's a king
-    }
+    kingPiece(toId, piece);
 
     if (Math.abs(parseInt(fromId[1]) - parseInt(toId[1])) === 2) {
         removeCapturedPiece(fromId, toId);
     }
 
-    isPlayerTurn = !isPlayerTurn; // Toggle turn
+    isPlayerTurn = !isPlayerTurn; 
+
+    checkGameOver();
+}
+
+
+function kingPiece(squareId, piece) {
+    const row = parseInt(squareId.substring(1));
+    if ((piece.classList.contains('black-piece') && row === 8) || 
+        (piece.classList.contains('white-piece') && row === 1)) {
+        piece.classList.add('king');
+        // Ensuring a visual change for kings
+        piece.innerHTML = 'K'; // Consider using an icon or differentiating style
+        piece.style.fontSize = '20px'; // Example style, adjust as needed
+        piece.style.color = 'gold'; // Example style, adjust as needed
+    }
+}
+
+function checkGameOver() {
+    const blackPieces = document.querySelectorAll('.black-piece').length;
+    const whitePieces = document.querySelectorAll('.white-piece').length;
+
+    if (blackPieces === 0 || !hasValidMoves('black-piece')) {
+        announceWinner('White');
+    } else if (whitePieces === 0 || !hasValidMoves('white-piece')) {
+        announceWinner('Black');
+    }
 }
 
 function shouldKing(squareId, isBlackPiece) {
@@ -131,6 +153,34 @@ function removeCapturedPiece(fromId, toId) {
     document.getElementById(captureAreaId).appendChild(capturedPiece);
 }
 
+function hasValidMoves(color) {
+    let valid = false;
+    document.querySelectorAll(`.${color}`).forEach(piece => {
+        const squareId = piece.parentElement.id;
+        getPotentialMoves(squareId, color).forEach(move => {
+            if (isValidMove(squareId, move, color)) {
+                valid = true;
+            }
+        });
+    });
+    return valid;
+}
+
+function announceWinner(winnerColor) {
+    const gameArea = document.getElementById('gameArea');
+    const announcement = document.createElement('div');
+    announcement.innerHTML = `<h2>${winnerColor} Wins!</h2>`;
+    announcement.style.color = winnerColor.toLowerCase() === 'black' ? 'black' : 'white';
+    announcement.style.fontSize = '24px';
+    announcement.style.fontWeight = 'bold';
+    gameArea.appendChild(announcement);
+    // Disable further moves
+    document.removeEventListener('dragstart', dragStartHandler);
+    document.querySelectorAll('.square').forEach(square => {
+        square.removeEventListener('dragover', handleDragOver);
+        square.removeEventListener('drop', handleDrop);
+    });
+}
 
 
 function computerMove() {
