@@ -74,10 +74,14 @@ function isValidMove(fromId, toId, color) {
     const [toRow, toCol] = toId.substring(1).split('c').map(Number);
     const direction = color === 'black-piece' ? 1 : -1;
 
+    const isKing = fromSquare.querySelector('.piece').classList.contains('king');
+    const rowChange = toRow - fromRow;
+    const validKingMove = isKing && Math.abs(rowChange) === 1 && Math.abs(fromCol - toCol) === 1;
+
     const isSimpleMove = (Math.abs(fromRow - toRow) === 1 && Math.abs(fromCol - toCol) === 1 && (toRow - fromRow) === direction);
     const isCaptureMove = (Math.abs(fromRow - toRow) === 2 && Math.abs(fromCol - toCol) === 2 && isCapture(fromId, toId, color));
 
-    return isSimpleMove || isCaptureMove;
+    return isSimpleMove || isCaptureMove || validKingMove;
 }
 
 function isCapture(fromId, toId, color) {
@@ -113,16 +117,18 @@ function movePiece(fromId, toId) {
 
 
 function kingPiece(squareId, piece) {
-    const row = parseInt(squareId.substring(1));
+    const row = parseInt(squareId[1]);
     if ((piece.classList.contains('black-piece') && row === 8) || 
         (piece.classList.contains('white-piece') && row === 1)) {
         piece.classList.add('king');
-        // Ensuring a visual change for kings
-        piece.innerHTML = 'K'; // Consider using an icon or differentiating style
-        piece.style.fontSize = '20px'; // Example style, adjust as needed
-        piece.style.color = 'gold'; // Example style, adjust as needed
+        piece.innerHTML = 'K';
+        piece.style.fontSize = '20px';
+        piece.style.color = 'gold';
+
+
     }
 }
+
 
 function checkGameOver() {
     const blackPieces = document.querySelectorAll('.black-piece').length;
@@ -137,7 +143,7 @@ function checkGameOver() {
 
 function shouldKing(squareId, isBlackPiece) {
     const row = parseInt(squareId.substring(1, 2));
-    return (isBlackPiece && row === 8) || (!isBlackPiece && row === 1);
+    return (isBlackPiece && row === 1) || (!isBlackPiece && row === 8);
 }
 
 function removeCapturedPiece(fromId, toId) {
@@ -196,9 +202,11 @@ function computerMove() {
                 }
                 // After moving, check for kinging
                 const movedPiece = document.getElementById(bestMove.toId).querySelector('.piece');
-                if (shouldKing(bestMove.toId, movedPiece.classList.contains('white-piece'))) {
+                if (movedPiece && shouldKing(bestMove.toId, movedPiece.classList.contains('black-piece'))) {
                     movedPiece.classList.add('king');
-                    // Optionally, update the piece's appearance to indicate it's a king
+                    movedPiece.innerHtml = 'K';
+                    movedPiece.style.fontSize = '20px';
+                    movedPiece.style.color = 'gold';
                 }
                 isPlayerTurn = true; // Toggle turn back to the player
             }
@@ -236,26 +244,54 @@ function executeMove(fromId, toId) {
     const toSquare = document.getElementById(toId);
     const piece = fromSquare.removeChild(fromSquare.firstChild);
     toSquare.appendChild(piece);
+
+    if (shouldKing(toId, piece.classList.contains('black-piece'))) {
+        piece.classList.add('king');
+        piece.innerHTML = 'K';
+        piece.style.fontSize = '20px';
+        piece.style.color = 'gold';
+    }
 }
 
 function getPotentialMoves(squareId, color) {
     let moves = [];
     const [row, col] = squareId.substring(1).split('c').map(Number);
-    const direction = color === 'white-piece' ? -1 : 1;
+    let directions = [];
 
-    let potentialPositions = [
-        { row: row + direction, col: col - 1 },
-        { row: row + direction, col: col + 1 }
-    ];
+    const piece = document.getElementById(squareId).querySelector('.piece');
+    const isKing = piece.classList.contains('king');
 
-    potentialPositions.push(
-        { row: row + 2 * direction, col: col - 2 },
-        { row: row + 2 * direction, col: col + 2 }
-    );
+    if (isKing) {
+        // Kings can move both forwards and backwards
+        directions = [1, -1];
+    } else {
+        // Regular pieces move in one direction
+        const direction = color === 'white-piece' ? -1 : 1;
+        directions = [direction];
+    }
 
-    moves = potentialPositions.filter(pos =>
-        pos.row >= 1 && pos.row <= 8 && pos.col >= 1 && pos.col <= 8
-    ).map(pos => `r${pos.row}c${pos.col}`);
+    directions.forEach(direction => {
+        let potentialPositions = [
+            { row: row + direction, col: col - 1 },
+            { row: row + direction, col: col + 1 },
+            { row: row + 2 * direction, col: col - 2 },
+            { row: row + 2 * direction, col: col + 2 }
+        ];
+
+        if (isKing) {
+            // Add backward diagonal moves for kings
+            potentialPositions.push(
+                { row: row - direction, col: col - 1 },
+                { row: row - direction, col: col + 1 },
+                { row: row - 2 * direction, col: col - 2 },
+                { row: row - 2 * direction, col: col + 2 }
+            );
+        }
+
+        moves = moves.concat(potentialPositions.filter(pos =>
+            pos.row >= 1 && pos.row <= 8 && pos.col >= 1 && pos.col <= 8
+        ).map(pos => `r${pos.row}c${pos.col}`));
+    });
 
     return moves;
 }
